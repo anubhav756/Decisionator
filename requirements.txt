@@ -1,0 +1,9 @@
+asyncio
+asyncpg
+cloud-sql-python-connector["asyncpg"]
+numpy
+pandas
+pgvector
+langchain
+transformers
+google-cloud-aiplatform
