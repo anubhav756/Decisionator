@@ -17,7 +17,7 @@ DATASET_URI = (
 
 def read_data():
     df = pd.read_csv(DATASET_URI)
-    df = df.loc[:, ["Quote", "Character", "Movie", "Reference", "Tag"]]
+    df = df.loc[:, ["quote", "character", "movie", "reference", "tag"]]
     df = df.dropna()
     return df
 
@@ -38,18 +38,33 @@ async def ping_db(conn):
     results = await conn.fetch("SELECT version()")
     print(results[0]["version"])
 
-    # close asyncpg connection
-    await conn.close()
-
 
 async def main():
     # get current running event loop to be used with Connector
     loop = asyncio.get_running_loop()
     # initialize Connector object as async context manager
     async with Connector(loop=loop) as connector:
-        print(read_data())
         conn = await get_conn(connector)
         await ping_db(conn)
+
+        await conn.execute("DROP TABLE IF EXISTS quotes CASCADE")
+        # Create the `products` table.
+        await conn.execute(
+            """CREATE TABLE quotes(
+                                quote TEXT,
+                                character TEXT,
+                                movie TEXT,
+                                reference TEXT,
+                                tag TEXT)"""
+        )
+
+        df = read_data()
+        # Copy the dataframe to the `quotes` table.
+        tuples = list(df.itertuples(index=False))
+        await conn.copy_records_to_table(
+            "quotes", records=tuples, columns=list(df), timeout=10
+        )
+        await conn.close()
 
 
 # Test connection with `asyncio`
