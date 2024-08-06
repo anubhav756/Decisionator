@@ -33,7 +33,7 @@ embeddings_service = VertexAIEmbeddings(
 
 def read_data():
     df = pd.read_csv(DATASET_URI)
-    df = df.loc[:, ["quote", "character", "movie", "reference", "tag"]]
+    df = df.loc[:, ["line", "character", "movie", "year"]]
     df = df.dropna()
     df["id"] = df.apply(lambda _: uuid.uuid4(), axis=1)
     return df
@@ -41,13 +41,15 @@ def read_data():
 
 async def get_conn(connector):
     # create connection to Cloud SQL database
-    return await connector.connect_async(
+    conn = await connector.connect_async(
         f"{PROJECT_ID}:{REGION}:{INSTANCE_NAME}",
         "asyncpg",
         user=f"{DB_USER}",
         password=f"{DB_PASSWORD}",
         db=f"{DB_NAME}",
     )
+    await register_vector(conn)
+    return conn
 
 
 async def ping_db(conn):
@@ -80,15 +82,14 @@ async def main():
         await ping_db(conn)
 
         await conn.execute("DROP TABLE IF EXISTS quotes CASCADE")
-        # Create the `products` table.
+        # Create the `quotes` table.
         await conn.execute(
             """CREATE TABLE quotes(
                                 id UUID PRIMARY KEY,
-                                quote TEXT,
+                                line TEXT,
                                 character TEXT,
                                 movie TEXT,
-                                reference TEXT,
-                                tag TEXT)"""
+                                year INTEGER)"""
         )
 
         df = read_data()
@@ -108,7 +109,7 @@ async def main():
         chunked = []
         for index, row in df.iterrows():
             id = row["id"]
-            content = row["quote"] + " - " + row["reference"]
+            content = row["line"]
             splits = text_splitter.create_documents([content])
             for s in splits:
                 r = {"id": id, "content": s.page_content}
@@ -126,10 +127,7 @@ async def main():
         quote_embeddings = pd.DataFrame(chunked)
 
         await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        await register_vector(conn)
-
         await conn.execute("DROP TABLE IF EXISTS quote_embeddings")
-        # Create the `quote_embeddings` table to store vector embeddings.
         await conn.execute(
             """CREATE TABLE quote_embeddings(
                                 id UUID NOT NULL REFERENCES quotes(id),
