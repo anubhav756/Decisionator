@@ -51,6 +51,7 @@ async def main():
         # Create the `products` table.
         await conn.execute(
             """CREATE TABLE quotes(
+                                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                 quote TEXT,
                                 character TEXT,
                                 movie TEXT,
