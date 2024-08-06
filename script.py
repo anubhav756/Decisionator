@@ -3,6 +3,7 @@ import asyncio
 import asyncpg
 import pandas as pd
 from google.cloud.sql.connector import Connector
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 
 PROJECT_ID = "anubhavdhawan-playground"
 DB_PASSWORD = "asdasd"
@@ -65,6 +66,22 @@ async def main():
         await conn.copy_records_to_table(
             "quotes", records=tuples, columns=list(df), timeout=10
         )
+
+        # Create vector embeddings
+        text_splitter = RecursiveCharacterTextSplitter(
+            separators=[".", "\n"],
+            chunk_size=500,
+            chunk_overlap=0,
+            length_function=len,
+        )
+        chunked = []
+        for index, row in df.iterrows():
+            id = row["id"]
+            content = row["quote"] + " - " + row["reference"]
+            splits = text_splitter.create_documents([content])
+            for s in splits:
+                r = {"id": id, "content": s.page_content}
+                chunked.append(r)
         await conn.close()
 
 
