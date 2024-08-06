@@ -1,9 +1,13 @@
 import asyncio
+import time
+import uuid
 
 import asyncpg
 import pandas as pd
+from google.cloud import aiplatform
 from google.cloud.sql.connector import Connector
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_google_vertexai import VertexAIEmbeddings
 
 PROJECT_ID = "anubhavdhawan-playground"
 DB_PASSWORD = "asdasd"
@@ -15,11 +19,17 @@ DATASET_URI = (
     "https://raw.githubusercontent.com/anubhav756/Decisionator/main/quotes.csv"
 )
 
+aiplatform.init(project=f"{PROJECT_ID}", location=f"{REGION}")
+embeddings_service = VertexAIEmbeddings(
+    model_name="textembedding-gecko@001"
+)  # Text embedding model
+
 
 def read_data():
     df = pd.read_csv(DATASET_URI)
     df = df.loc[:, ["quote", "character", "movie", "reference", "tag"]]
     df = df.dropna()
+    df["id"] = df.apply(lambda _: uuid.uuid4(), axis=1)
     return df
 
 
@@ -40,6 +50,21 @@ async def ping_db(conn):
     print(results[0]["version"])
 
 
+# Helper function to retry failed API requests with exponential backoff.
+def retry_with_backoff(func, *args, retry_delay=5, backoff_factor=2, **kwargs):
+    max_attempts = 10
+    retries = 0
+    for i in range(max_attempts):
+        try:
+            return func(*args, **kwargs)
+        except Exception as e:
+            print(f"error: {e}")
+            retries += 1
+            wait = retry_delay * (backoff_factor**retries)
+            print(f"Retry after waiting for {wait} seconds...")
+            time.sleep(wait)
+
+
 async def main():
     # get current running event loop to be used with Connector
     loop = asyncio.get_running_loop()
@@ -52,7 +77,7 @@ async def main():
         # Create the `products` table.
         await conn.execute(
             """CREATE TABLE quotes(
-                                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                                id UUID PRIMARY KEY,
                                 quote TEXT,
                                 character TEXT,
                                 movie TEXT,
@@ -82,9 +107,21 @@ async def main():
             for s in splits:
                 r = {"id": id, "content": s.page_content}
                 chunked.append(r)
+
+        batch_size = 5
+        for i in range(0, len(chunked), batch_size):
+            request = [x["content"] for x in chunked[i : i + batch_size]]
+            response = retry_with_backoff(embeddings_service.embed_documents, request)
+            # Store the retrieved vector embeddings for each chunk back.
+            for x, e in zip(chunked[i : i + batch_size], response):
+                x["embedding"] = e
+
+        # Store the generated embeddings in a pandas dataframe.
+        quote_embeddings = pd.DataFrame(chunked)
+        print(quote_embeddings.head())
+
         await conn.close()
 
 
-# Test connection with `asyncio`
 if __name__ == "__main__":
     asyncio.run(main())  # Start the event loop to run async code
