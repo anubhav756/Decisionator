@@ -20,6 +20,10 @@ DB_USER = "thanos"
 DATASET_URI = (
     "https://raw.githubusercontent.com/anubhav756/Decisionator/main/quotes.csv"
 )
+M = 24
+EF_CONSTRUCTION = 100
+OPERATOR = "vector_cosine_ops"
+
 
 aiplatform.init(project=f"{PROJECT_ID}", location=f"{REGION}")
 embeddings_service = VertexAIEmbeddings(
@@ -145,6 +149,14 @@ async def main():
                     quote_embeddings["embedding"].apply(np.array).tolist(),
                 )
             ),
+        )
+
+        # Create an HNSW index on the `quote_embeddings` table.
+        await conn.execute(
+            f"""CREATE INDEX ON quote_embeddings
+              USING hnsw(embedding {OPERATOR})
+              WITH (m = {M}, ef_construction = {EF_CONSTRUCTION})
+            """
         )
 
         await conn.close()
