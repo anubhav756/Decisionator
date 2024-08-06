@@ -3,11 +3,13 @@ import time
 import uuid
 
 import asyncpg
+import numpy as np
 import pandas as pd
 from google.cloud import aiplatform
 from google.cloud.sql.connector import Connector
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_google_vertexai import VertexAIEmbeddings
+from pgvector.asyncpg import register_vector
 
 PROJECT_ID = "anubhavdhawan-playground"
 DB_PASSWORD = "asdasd"
@@ -118,7 +120,32 @@ async def main():
 
         # Store the generated embeddings in a pandas dataframe.
         quote_embeddings = pd.DataFrame(chunked)
-        print(quote_embeddings.head())
+
+        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+        await register_vector(conn)
+
+        await conn.execute("DROP TABLE IF EXISTS quote_embeddings")
+        # Create the `quote_embeddings` table to store vector embeddings.
+        await conn.execute(
+            """CREATE TABLE quote_embeddings(
+                                id UUID NOT NULL REFERENCES quotes(id),
+                                content TEXT,
+                                embedding vector(768))"""
+        )
+
+        await conn.executemany(
+            """
+            INSERT INTO quote_embeddings (id, content, embedding) 
+            VALUES ($1, $2, $3)
+            """,
+            list(
+                zip(
+                    quote_embeddings["id"].tolist(),
+                    quote_embeddings["content"].tolist(),
+                    quote_embeddings["embedding"].apply(np.array).tolist(),
+                )
+            ),
+        )
 
         await conn.close()
 
