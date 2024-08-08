@@ -1,14 +1,18 @@
 import asyncio
 import time
 import uuid
+from typing import List
 
 import asyncpg
 import numpy as np
 import pandas as pd
 from google.cloud import aiplatform
 from google.cloud.sql.connector import Connector
+from langchain.output_parsers import PydanticOutputParser
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_google_vertexai import VertexAIEmbeddings
+from langchain_core.prompts import PromptTemplate
+from langchain_core.pydantic_v1 import BaseModel, Field
+from langchain_google_vertexai import ChatVertexAI, VertexAIEmbeddings
 from pgvector.asyncpg import register_vector
 
 PROJECT_ID = "anubhavdhawan-playground"
@@ -73,14 +77,191 @@ def retry_with_backoff(func, *args, retry_delay=5, backoff_factor=2, **kwargs):
             time.sleep(wait)
 
 
+async def find_options(query, model):
+    class Option(BaseModel):
+        title: str = Field(
+            description="Title of the possible choice for the given question."
+        )
+        justification: str = Field(description="Justification of the choice.")
+
+    class Query(BaseModel):
+        question: str = Field(
+            description="Question with potentially more than one options."
+        )
+        options: List[Option] = Field(
+            description="All possible options for the question."
+        )
+
+    parser = PydanticOutputParser(pydantic_object=Query)
+    prompt = PromptTemplate(
+        template="""
+            You are tasked with identifying the options present in the query given below, which could be a question or statement.
+            The options are the potential choices or actions implied by the query.
+            If no explicit options are present, generate the most likely implicit options based on the context.
+            Focus on clear, actionable advice.
+            Do not include additional commentary or justification.
+            {format_instructions}
+
+            **Query:**
+            {query}
+        """,
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+        input_variables=["query"],
+    )
+    chain = prompt | model | parser
+    return chain.invoke({"query": query})
+
+
+async def get_similar_dialog(justification, conn):
+    # character = "Iron Man"
+    qe = embeddings_service.embed_query(justification)
+    similarity_threshold = 0.6
+    num_matches = 1
+
+    results = await conn.fetch(
+        """
+                            WITH vector_matches AS (
+                              SELECT id, 1 - (embedding <=> $1) AS similarity
+                              FROM quote_embeddings
+                              WHERE 1 - (embedding <=> $1) > $2
+                              ORDER BY similarity DESC
+                              LIMIT $3
+                            )
+                            SELECT line, character, movie, year, similarity
+                            FROM
+                            vector_matches
+                            LEFT JOIN
+                            quotes
+                            ON vector_matches.id = quotes.id
+                            """,
+        # AND character = $4
+        qe,
+        similarity_threshold,
+        num_matches,
+        # character,
+    )
+    if len(results) == 0:
+        raise Exception("Did not find any results. Adjust the query parameters.")
+
+    return results[0]
+
+
+async def get_best_dialog(options, conn):
+    max_similarity = 0
+    best_dialog = {}
+    for option in options:
+        option_query = option.title + "; " + option.justification
+        print("POSSIBLE OPTION!!! -->", option_query)
+        similar_dialog = await get_similar_dialog(option_query, conn)
+        print("SIMILAR DIALOG!!! <--", similar_dialog)
+        if similar_dialog["similarity"] > max_similarity:
+            max_similarity = similar_dialog["similarity"]
+            best_dialog = {
+                "line": similar_dialog["line"],
+                "character": similar_dialog["character"],
+                "movie": similar_dialog["movie"],
+                "year": similar_dialog["year"],
+                "title": option.title,
+                "justification": option.justification,
+            }
+
+    return best_dialog
+
+
+async def modify_option(dialog, query, model):
+    class Justification(BaseModel):
+        modified_sentence_b: str = Field(
+            description="The modified version of sentence B"
+        )
+
+    parser = PydanticOutputParser(pydantic_object=Justification)
+    prompt = PromptTemplate(
+        template="""
+            Note that three sentences are given below, namely Sentence A, Sentence B and Sentence C.
+            The Sentence B is an answer for the question in Sentence A, and Sentence C is a justification for choosing Sentence B.
+            The tone of your answer should be as {character} from the movie {movie} that came out in {year}.
+            How would you convey the meaning of Sentence B and optionally Sentence C?
+            Answer in one or two sentences only.
+            {format_instructions}
+
+            **Sentence A:**
+            {query}
+
+            **Sentence B:**
+            {title}
+
+            **Sentence C:**
+            {justification}
+        """,
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+        input_variables=[
+            "character",
+            "movie",
+            "year",
+            "query",
+            "title",
+            "justification",
+        ],
+    )
+
+    chain = prompt | model | parser
+
+    response = chain.invoke(
+        {
+            "character": dialog["character"],
+            "movie": dialog["movie"],
+            "year": dialog["year"],
+            "query": query,
+            "title": dialog["title"],
+            "justification": dialog["justification"],
+        }
+    )
+
+    return response.modified_sentence_b
+
+
+async def merge_dialog_justification(justification, dialog, model):
+    class Response(BaseModel):
+        modified_sentence_a: str = Field(
+            description="The modified version of sentence A"
+        )
+
+    parser = PydanticOutputParser(pydantic_object=Response)
+    prompt = PromptTemplate(
+        template="""
+            {format_instructions}
+            Note that two sentences are given below, namely Sentence A and Sentence B.
+            Your task is to modify sentence A so that it ends with Sentence B in a clever way.
+
+            **Sentence A:**
+            {justification}
+
+            **Sentence B:**
+            {dialog}
+        """,
+        partial_variables={"format_instructions": parser.get_format_instructions()},
+        input_variables=["justification", "dialog"],
+    )
+
+    chain = prompt | model | parser
+
+    response = chain.invoke(
+        {
+            "justification": justification,
+            "dialog": dialog,
+        }
+    )
+
+    return response.modified_sentence_a
+
+
 async def main():
-    # get current running event loop to be used with Connector
     loop = asyncio.get_running_loop()
-    # initialize Connector object as async context manager
     async with Connector(loop=loop) as connector:
         conn = await get_conn(connector)
         await ping_db(conn)
 
+        '''
         await conn.execute("DROP TABLE IF EXISTS quotes CASCADE")
         # Create the `quotes` table.
         await conn.execute(
@@ -156,9 +337,36 @@ async def main():
               WITH (m = {M}, ef_construction = {EF_CONSTRUCTION})
             """
         )
+        '''
+        model = ChatVertexAI(model_name="gemini-pro")
+
+        query = "Should I go to work?"  # <--- USER INPUT!!!
+
+        response = await find_options(query, model)
+
+        best_dialog = await get_best_dialog(response.options, conn)
+        print("BEST DIALOG!!! <--", best_dialog)
+
+        modified_best_option = await modify_option(best_dialog, query, model)
+        print("MODIFIED BEST OPTION!!! <--", modified_best_option)
+
+        final_response = await merge_dialog_justification(
+            modified_best_option, best_dialog["line"], model
+        )
+        print("!!!", final_response)
+        print(
+            "###",
+            best_dialog["line"],
+            "|",
+            best_dialog["character"],
+            "|",
+            best_dialog["movie"],
+            "|",
+            best_dialog["year"],
+        )
 
         await conn.close()
 
 
 if __name__ == "__main__":
-    asyncio.run(main())  # Start the event loop to run async code
+    asyncio.run(main())
