@@ -30,9 +30,85 @@ OPERATOR = "vector_cosine_ops"
 
 
 aiplatform.init(project=f"{PROJECT_ID}", location=f"{REGION}")
-embeddings_service = VertexAIEmbeddings(
-    model_name="textembedding-gecko@001"
-)  # Text embedding model
+embeddings_service = VertexAIEmbeddings(model_name="textembedding-gecko@001")
+
+
+async def setup_db(conn):
+    await conn.execute("DROP TABLE IF EXISTS quotes CASCADE")
+    # Create the `quotes` table.
+    await conn.execute(
+        """CREATE TABLE quotes(
+                            id UUID PRIMARY KEY,
+                            line TEXT,
+                            character TEXT,
+                            movie TEXT,
+                            year INTEGER)"""
+    )
+
+    df = read_data()
+    # Copy the dataframe to the `quotes` table.
+    tuples = list(df.itertuples(index=False))
+    await conn.copy_records_to_table(
+        "quotes", records=tuples, columns=list(df), timeout=10
+    )
+
+    # Create vector embeddings
+    text_splitter = RecursiveCharacterTextSplitter(
+        separators=[".", "\n"],
+        chunk_size=500,
+        chunk_overlap=0,
+        length_function=len,
+    )
+    chunked = []
+    for index, row in df.iterrows():
+        id = row["id"]
+        content = row["line"]
+        splits = text_splitter.create_documents([content])
+        for s in splits:
+            r = {"id": id, "content": s.page_content}
+            chunked.append(r)
+
+    batch_size = 5
+    for i in range(0, len(chunked), batch_size):
+        request = [x["content"] for x in chunked[i : i + batch_size]]
+        response = retry_with_backoff(embeddings_service.embed_documents, request)
+        # Store the retrieved vector embeddings for each chunk back.
+        for x, e in zip(chunked[i : i + batch_size], response):
+            x["embedding"] = e
+
+    # Store the generated embeddings in a pandas dataframe.
+    quote_embeddings = pd.DataFrame(chunked)
+
+    await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
+    await conn.execute("DROP TABLE IF EXISTS quote_embeddings")
+    await conn.execute(
+        """CREATE TABLE quote_embeddings(
+                            id UUID NOT NULL REFERENCES quotes(id),
+                            content TEXT,
+                            embedding vector(768))"""
+    )
+
+    await conn.executemany(
+        """
+        INSERT INTO quote_embeddings (id, content, embedding) 
+        VALUES ($1, $2, $3)
+        """,
+        list(
+            zip(
+                quote_embeddings["id"].tolist(),
+                quote_embeddings["content"].tolist(),
+                quote_embeddings["embedding"].apply(np.array).tolist(),
+            )
+        ),
+    )
+
+    # Create an HNSW index on the `quote_embeddings` table.
+    await conn.execute(
+        f"""CREATE INDEX ON quote_embeddings
+            USING hnsw(embedding {OPERATOR})
+            WITH (m = {M}, ef_construction = {EF_CONSTRUCTION})
+        """
+    )
 
 
 def read_data():
@@ -255,95 +331,16 @@ async def merge_dialog_justification(justification, dialog, model):
     return response.modified_sentence_a
 
 
-async def main():
+async def make_decision(query):
+    conn = await get_conn(connector)
+    await ping_db(conn)
+
     loop = asyncio.get_running_loop()
     async with Connector(loop=loop) as connector:
         conn = await get_conn(connector)
-        await ping_db(conn)
-
-        '''
-        await conn.execute("DROP TABLE IF EXISTS quotes CASCADE")
-        # Create the `quotes` table.
-        await conn.execute(
-            """CREATE TABLE quotes(
-                                id UUID PRIMARY KEY,
-                                line TEXT,
-                                character TEXT,
-                                movie TEXT,
-                                year INTEGER)"""
-        )
-
-        df = read_data()
-        # Copy the dataframe to the `quotes` table.
-        tuples = list(df.itertuples(index=False))
-        await conn.copy_records_to_table(
-            "quotes", records=tuples, columns=list(df), timeout=10
-        )
-
-        # Create vector embeddings
-        text_splitter = RecursiveCharacterTextSplitter(
-            separators=[".", "\n"],
-            chunk_size=500,
-            chunk_overlap=0,
-            length_function=len,
-        )
-        chunked = []
-        for index, row in df.iterrows():
-            id = row["id"]
-            content = row["line"]
-            splits = text_splitter.create_documents([content])
-            for s in splits:
-                r = {"id": id, "content": s.page_content}
-                chunked.append(r)
-
-        batch_size = 5
-        for i in range(0, len(chunked), batch_size):
-            request = [x["content"] for x in chunked[i : i + batch_size]]
-            response = retry_with_backoff(embeddings_service.embed_documents, request)
-            # Store the retrieved vector embeddings for each chunk back.
-            for x, e in zip(chunked[i : i + batch_size], response):
-                x["embedding"] = e
-
-        # Store the generated embeddings in a pandas dataframe.
-        quote_embeddings = pd.DataFrame(chunked)
-
-        await conn.execute("CREATE EXTENSION IF NOT EXISTS vector")
-        await conn.execute("DROP TABLE IF EXISTS quote_embeddings")
-        await conn.execute(
-            """CREATE TABLE quote_embeddings(
-                                id UUID NOT NULL REFERENCES quotes(id),
-                                content TEXT,
-                                embedding vector(768))"""
-        )
-
-        await conn.executemany(
-            """
-            INSERT INTO quote_embeddings (id, content, embedding) 
-            VALUES ($1, $2, $3)
-            """,
-            list(
-                zip(
-                    quote_embeddings["id"].tolist(),
-                    quote_embeddings["content"].tolist(),
-                    quote_embeddings["embedding"].apply(np.array).tolist(),
-                )
-            ),
-        )
-
-        # Create an HNSW index on the `quote_embeddings` table.
-        await conn.execute(
-            f"""CREATE INDEX ON quote_embeddings
-              USING hnsw(embedding {OPERATOR})
-              WITH (m = {M}, ef_construction = {EF_CONSTRUCTION})
-            """
-        )
-        '''
         model = ChatVertexAI(model_name="gemini-pro")
 
-        query = "Should I go to work?"  # <--- USER INPUT!!!
-
         response = await find_options(query, model)
-
         best_dialog = await get_best_dialog(response.options, conn)
         print("BEST DIALOG!!! <--", best_dialog)
 
@@ -366,7 +363,3 @@ async def main():
         )
 
         await conn.close()
-
-
-if __name__ == "__main__":
-    asyncio.run(main())

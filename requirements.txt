@@ -8,3 +8,4 @@ transformers
 google-cloud-aiplatform
 langchain-google-vertexai
 cloud-sql-python-connector["asyncpg"]
+fastapi
