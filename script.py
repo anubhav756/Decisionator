@@ -173,6 +173,7 @@ async def find_options(query, model):
         template="""
             You are tasked with identifying the options present in the query given below, which could be a question or statement.
             The options are the potential choices or actions implied by the query.
+            Make sure that at least two options are identified.
             If no explicit options are present, generate the most likely implicit options based on the context.
             Focus on clear, actionable advice.
             Do not include additional commentary or justification.
@@ -298,14 +299,14 @@ async def modify_option(dialog, query, model):
 
 async def merge_dialog_justification(justification, dialog, model):
     class Response(BaseModel):
-        response: str = Field(description="The final response dialog.")
+        merged_sentences: str = Field(description="The final response dialog.")
 
     parser = PydanticOutputParser(pydantic_object=Response)
     prompt = PromptTemplate(
         template="""
             {format_instructions}
             Note that two sentences are given below, namely Sentence A and Sentence B.
-            Your task is to add Sentence B to Sentence A such that it sounds like one single dialog.
+            Your task is to add Sentence B to Sentence A in a clever way such that it sounds like one single dialog.
 
             **Sentence A:**
             {justification}
@@ -326,7 +327,7 @@ async def merge_dialog_justification(justification, dialog, model):
         }
     )
 
-    return response.response
+    return response.merged_sentences
 
 
 async def make_decision(query):
