@@ -255,7 +255,7 @@ async def modify_option(dialog, query, model):
         template="""
             Note that three sentences are given below, namely Sentence A, Sentence B and Sentence C.
             The Sentence B is an answer for the question in Sentence A, and Sentence C is a justification for choosing Sentence B.
-            The tone of your answer should be as {character} from the movie {movie} that came out in {year}.
+            Pretend you are {character} from the movie {movie} that came out in {year}.
             How would you convey the meaning of Sentence B and optionally Sentence C?
             Answer in one or two sentences only.
             {format_instructions}
@@ -298,16 +298,14 @@ async def modify_option(dialog, query, model):
 
 async def merge_dialog_justification(justification, dialog, model):
     class Response(BaseModel):
-        modified_sentence_a: str = Field(
-            description="The modified version of sentence A"
-        )
+        response: str = Field(description="The final response dialog.")
 
     parser = PydanticOutputParser(pydantic_object=Response)
     prompt = PromptTemplate(
         template="""
             {format_instructions}
             Note that two sentences are given below, namely Sentence A and Sentence B.
-            Your task is to modify sentence A so that it ends with Sentence B in a clever way.
+            Your task is to add Sentence B to Sentence A such that it sounds like one single dialog.
 
             **Sentence A:**
             {justification}
@@ -328,19 +326,21 @@ async def merge_dialog_justification(justification, dialog, model):
         }
     )
 
-    return response.modified_sentence_a
+    return response.response
 
 
 async def make_decision(query):
-    conn = await get_conn(connector)
-    await ping_db(conn)
-
     loop = asyncio.get_running_loop()
     async with Connector(loop=loop) as connector:
         conn = await get_conn(connector)
+        # await ping_db(conn)
+
         model = ChatVertexAI(model_name="gemini-pro")
 
         response = await find_options(query, model)
+
+        yield str([option.title for option in response.options])
+
         best_dialog = await get_best_dialog(response.options, conn)
         print("BEST DIALOG!!! <--", best_dialog)
 
@@ -360,6 +360,16 @@ async def make_decision(query):
             best_dialog["movie"],
             "|",
             best_dialog["year"],
+        )
+
+        yield str(
+            {
+                "response": final_response,
+                "original_quote": best_dialog["line"],
+                "character": best_dialog["character"],
+                "movie": best_dialog["movie"],
+                "year": best_dialog["year"],
+            }
         )
 
         await conn.close()
