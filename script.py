@@ -256,8 +256,8 @@ async def modify_option(dialog, query, model):
         template="""
             Note that three sentences are given below, namely Sentence A, Sentence B and Sentence C.
             The Sentence B is an answer for the question in Sentence A, and Sentence C is a justification for choosing Sentence B.
-            Pretend you are {character} from the movie {movie} that came out in {year}.
-            How would you convey the meaning of Sentence B and optionally Sentence C?
+            You are {character} from the movie {movie} that came out in {year}.
+            How would you clearly convey the meaning of Sentence B and optionally Sentence C?
             Answer in one or two sentences only.
             {format_instructions}
 
@@ -345,11 +345,11 @@ async def make_decision(query):
         best_dialog = await get_best_dialog(response.options, conn)
         print("BEST DIALOG!!! <--", best_dialog)
 
-        modified_best_option = await modify_option(best_dialog, query, model)
-        print("MODIFIED BEST OPTION!!! <--", modified_best_option)
+        modified_best_dialog = await modify_option(best_dialog, query, model)
+        print("MODIFIED BEST DIALOG!!! <--", modified_best_dialog)
 
         final_response = await merge_dialog_justification(
-            modified_best_option, best_dialog["line"], model
+            modified_best_dialog, best_dialog["line"], model
         )
         print("!!!", final_response)
         print(
@@ -370,6 +370,14 @@ async def make_decision(query):
                 "character": best_dialog["character"],
                 "movie": best_dialog["movie"],
                 "year": best_dialog["year"],
+                "options": [
+                    {
+                        "title": option.title,
+                        "justification": option.justification,
+                        "is_chosen": best_dialog["title"] == option.title,
+                    }
+                    for option in response.options
+                ],
             }
         )
 
