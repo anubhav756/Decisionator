@@ -1,0 +1,40 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  
+  .textArea {
+    width: 80%;
+    height: 200px;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    resize: vertical;
+  }
+  
+  .button {
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .buttonImage {
+    height: 100px;
+    vertical-align: middle;
+  }
+  
+  .responseContainer {
+    width: 80%;
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    padding: 10px;
+    overflow: auto;
+  }
+  
+  .responsePre {
+    white-space: pre-wrap;
+  }
+  
