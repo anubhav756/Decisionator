@@ -1,4 +1,5 @@
 import asyncio
+import json
 import time
 import uuid
 from typing import List
@@ -340,7 +341,7 @@ async def make_decision(query):
 
         response = await find_options(query, model)
 
-        yield str([option.title for option in response.options])
+        yield json.dumps([option.title for option in response.options])
 
         best_dialog = await get_best_dialog(response.options, conn)
         print("BEST DIALOG!!! <--", best_dialog)
@@ -363,7 +364,7 @@ async def make_decision(query):
             best_dialog["year"],
         )
 
-        yield str(
+        yield json.dumps(
             {
                 "response": final_response,
                 "original_quote": best_dialog["line"],
