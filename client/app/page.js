@@ -3,17 +3,22 @@
 import { useState } from 'react';
 import styles from './page.module.css';
 
+const INITIAL_INPUT = '';
+const INITIAL_OPTIONS = [];
+const INITIAL_RESPONSE = '';
+
 export default function Page() {
-  const [inputText, setInputText] = useState('');
-  const [streamedResponse, setStreamedResponse] = useState('');
+  const [inputText, setInputText] = useState(INITIAL_INPUT);
+  const [options, setOptions] = useState(INITIAL_OPTIONS);
+  const [response, setResponse] = useState(INITIAL_RESPONSE);
 
   const handleInputChange = (event) => {
     setInputText(event.target.value);
   };
 
   const handleSubmit = async () => {
-    setStreamedResponse('');
-
+    setResponse(INITIAL_RESPONSE);
+    setOptions(INITIAL_OPTIONS);
     try {
       const response = await fetch('http://localhost:8000/ask', {
         method: 'POST',
@@ -26,16 +31,16 @@ export default function Page() {
       const reader = response.body.getReader();
       while (true) {
         const { done, value } = await reader.read();
-        if (done) {
-          break;
-        }
+        if (done) break;
 
-        const chunkText = new TextDecoder().decode(value);
-        setStreamedResponse((prev) => prev + chunkText);
+        const chunkResponse = JSON.parse(new TextDecoder().decode(value));
+        console.log(chunkResponse);
+
+        if (chunkResponse.response) setResponse(chunkResponse.response)
+        else setOptions(chunkResponse);
       }
     } catch (error) {
       console.error('Error:', error);
-      setStreamedResponse('An error occurred. Please try again.');
     }
   };
 
@@ -44,17 +49,15 @@ export default function Page() {
       <textarea
         value={inputText}
         onChange={handleInputChange}
-        placeholder="Enter text here..."
+        placeholder="Enter here to decide..."
         className={styles.textArea}
       />
 
       <button onClick={handleSubmit} className={styles.button}>
         <img src="/logo.png" alt="Send" className={styles.buttonImage} />
       </button>
-
-      <div className={styles.responseContainer}>
-        <pre className={styles.responsePre}>{streamedResponse}</pre> 
-      </div>
+      <div>Options: {JSON.stringify(options)}</div>
+      <div>Response: {response}</div>
     </div>
   );
 }
