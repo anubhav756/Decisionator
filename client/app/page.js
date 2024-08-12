@@ -5,7 +5,7 @@ import styles from './page.module.css';
 
 const INITIAL_INPUT = '';
 const INITIAL_OPTIONS = [];
-const INITIAL_RESPONSE = '';
+const INITIAL_RESPONSE = {};
 
 export default function Page() {
   const [inputText, setInputText] = useState(INITIAL_INPUT);
@@ -36,7 +36,7 @@ export default function Page() {
         const chunkResponse = JSON.parse(new TextDecoder().decode(value));
         console.log(chunkResponse);
 
-        if (chunkResponse.response) setResponse(chunkResponse.response)
+        if (chunkResponse.response) setResponse(chunkResponse)
         else setOptions(chunkResponse);
       }
     } catch (error) {
@@ -56,8 +56,22 @@ export default function Page() {
       <button onClick={handleSubmit} className={styles.button}>
         <img src="/logo.png" alt="Send" className={styles.buttonImage} />
       </button>
-      <div>Options: {JSON.stringify(options)}</div>
-      <div>Response: {response}</div>
+      <div>Options:
+      {
+        options.map((option, i) => (
+          <div key={i}>{option}</div>
+        ))
+      }
+      </div>
+      <div>Response: {response.response}</div>
+      <div>Original dialog: {response.original_quote}</div>
+      <div>Character: {response.character}</div>
+      <div>Movie: {response.movie}</div>
+      <div>Year: {response.year}</div>
+      <div>Justifications:</div>
+      {response && response.options && response.options.map(({title, justification, is_chosen}, i) => (
+        <div key={i}><b>{title}: </b>{justification}{is_chosen && " | CHOSEN!!!"}</div>
+      ))}
     </div>
   );
 }
