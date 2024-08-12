@@ -307,8 +307,8 @@ async def merge_dialog_justification(justification, dialog, model):
         template="""
             {format_instructions}
             Note that two sentences are given below, namely Sentence A and Sentence B.
-            Sentence B is a movie dialog. Your task is to additionally convey the meaning of Sentence A while minimally modifying Sentence B.
-            Be creative and make sure that it sounds like one single dialog.
+            Sentence B is a movie dialog. Your task is to optionally modify Sentence B to make sure that the meaning of Sentence A is conveyed as well.
+            If you require modifying Sentence B, be creative but make sure that it sounds like one single dialog.
 
             **Sentence A:**
             {justification}
