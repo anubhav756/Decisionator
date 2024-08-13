@@ -77,7 +77,7 @@ export default function Page() {
             handleSnap(); 
           }
         }}
-        className={`relative inline-flex items-center justify-center px-8 py-4 text-5xl font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 focus:outline-none
+        className={`relative inline-flex items-center justify-center px-8 py-4 text-5xl text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 focus:outline-none
                    ${isSubmitting ? 'pointer-events-none opacity-50' : ''}`}
         role="button">
         Snap
@@ -96,7 +96,7 @@ export default function Page() {
       </div>
     </div>
     {response.response ? (
-      <div className="mt-24 justify-center text-3xl font-bold transition-all duration-200">
+      <div className="mt-24 justify-center text-3xl transition-all duration-200">
         <div className="text-gray-400">
           **{response.character} snaps finger**
         </div>
@@ -105,9 +105,9 @@ export default function Page() {
         </div>
         <button 
           onClick={() => setIsOpen(true)}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+          className="mt-24 bg-gray-800 hover:bg-gray-700 text-xl text-white py-2 px-4 rounded"
         >
-          More insights
+          More Insights
         </button>
       </div>
     ) : ""}
