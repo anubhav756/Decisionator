@@ -315,7 +315,7 @@ async def merge_dialog_justification(justification, dialog, model):
             Note that two sentences are given below, namely Sentence A and Sentence B.
             Your task is to minimally modify Sentence B to make sure that the meaning of Sentence A is conveyed as well.
             Be creative and make sure that it sounds like one single sentence.
-            Also be sure that the Sentence B is still identifiable in your response.
+            Also try to include the entire Sentence B in your response.
 
             **Sentence A:**
             {justification}
