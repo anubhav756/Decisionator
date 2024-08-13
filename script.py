@@ -4,12 +4,12 @@ import time
 import uuid
 from typing import List
 
-import asyncpg
 import numpy as np
 import pandas as pd
 from google.cloud import aiplatform
 from google.cloud.sql.connector import Connector
 from langchain.output_parsers import PydanticOutputParser
+from langchain.schema.output_parser import OutputParserException
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_core.prompts import PromptTemplate
 from langchain_core.pydantic_v1 import BaseModel, Field
@@ -187,7 +187,11 @@ async def find_options(query, model):
         input_variables=["query"],
     )
     chain = prompt | model | parser
-    return chain.invoke({"query": query})
+
+    try:
+        return chain.invoke({"query": query})
+    except OutputParserException as e:
+        print(f"Error parsing model output: {e}")
 
 
 async def get_similar_dialog(justification, conn):
@@ -248,9 +252,7 @@ async def get_best_dialog(options, conn):
 
 async def modify_option(dialog, query, model):
     class Justification(BaseModel):
-        modified_sentence_b: str = Field(
-            description="The modified version of sentence B"
-        )
+        answer: str = Field(description="The resulting answer.")
 
     parser = PydanticOutputParser(pydantic_object=Justification)
     prompt = PromptTemplate(
@@ -284,31 +286,35 @@ async def modify_option(dialog, query, model):
 
     chain = prompt | model | parser
 
-    response = chain.invoke(
-        {
-            "character": dialog["character"],
-            "movie": dialog["movie"],
-            "year": dialog["year"],
-            "query": query,
-            "title": dialog["title"],
-            "justification": dialog["justification"],
-        }
-    )
-
-    return response.modified_sentence_b
+    try:
+        response = chain.invoke(
+            {
+                "character": dialog["character"],
+                "movie": dialog["movie"],
+                "year": dialog["year"],
+                "query": query,
+                "title": dialog["title"],
+                "justification": dialog["justification"],
+            }
+        )
+        return response.answer
+    except OutputParserException as e:
+        print(f"Error parsing model output: {e}")
 
 
 async def merge_dialog_justification(justification, dialog, model):
     class Response(BaseModel):
-        merged_sentences: str = Field(description="The final response dialog.")
+        modified_sentence_b: str = Field(
+            description="The modified version of Sentence B."
+        )
 
     parser = PydanticOutputParser(pydantic_object=Response)
     prompt = PromptTemplate(
         template="""
             {format_instructions}
             Note that two sentences are given below, namely Sentence A and Sentence B.
-            Sentence B is a movie dialog. Your task is to minimally modify Sentence B to make sure that the meaning of Sentence A is conveyed as well.
-            If you require modifying Sentence B, be creative but make sure that it sounds like one single dialog.
+            Your task is to minimally modify Sentence B to make sure that the meaning of Sentence A is conveyed as well.
+            Be creative and make sure that it sounds like one single sentence.
 
             **Sentence A:**
             {justification}
@@ -322,14 +328,18 @@ async def merge_dialog_justification(justification, dialog, model):
 
     chain = prompt | model | parser
 
-    response = chain.invoke(
-        {
-            "justification": justification,
-            "dialog": dialog,
-        }
-    )
+    try:
+        response = chain.invoke(
+            {
+                "justification": justification,
+                "dialog": dialog,
+            }
+        )
+        print(">>>>", response)
 
-    return response.merged_sentences
+        return response.modified_sentence_b
+    except OutputParserException as e:
+        print(f"Error parsing model output: {e}")
 
 
 async def make_decision(query):
