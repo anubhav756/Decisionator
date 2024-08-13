@@ -104,10 +104,10 @@ export default function Page() {
     {isSubmitting && !response.response && (
       <div className="fixed inset-0 z-50"> 
         <div className="flex items-center justify-center h-screen">
-          <img src="logo-sharded.png" />
-          <img src="shard-1.png" className="animate-spin" style={{ position: 'absolute', marginBottom: 500, marginLeft: 150 }} />
-          <img src="shard-2.png" className="animate-spin" style={{ position: 'absolute', marginBottom: 440, marginLeft: 40 }} />
-          <img src="shard-3.png" className="animate-spin" style={{ position: 'absolute', marginBottom: 400, marginLeft: 220 }} />
+          <img src="logo-sharded.png" style={{ height: 300 }} />
+          <img src="shard-1.png" className="animate-spin" style={{ position: 'absolute', height: 40, marginBottom: 350, marginLeft: 90 }} />
+          <img src="shard-2.png" className="animate-spin" style={{ position: 'absolute', height: 26, marginBottom: 280, marginLeft: 30 }} />
+          <img src="shard-3.png" className="animate-spin" style={{ position: 'absolute', height: 20, marginBottom: 280, marginLeft: 150 }} />
         </div>
       </div>
     )}
@@ -120,7 +120,7 @@ export default function Page() {
           ...
         </div>
         <div className="text-white mt-4">
-          {response.character}: {response.response}
+          <span className="text-gray-400">{response.character}:</span> {response.response}
         </div>
         <div className="mt-4 text-lg font-normal">
           {isExpanded ? (
