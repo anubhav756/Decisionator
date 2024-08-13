@@ -45,23 +45,36 @@ export default function Page() {
   };
 
   return (
-    <div className={styles.container}>
-      <textarea
-        value={inputText}
-        onChange={handleInputChange}
-        placeholder="Enter here to decide..."
-        className={styles.textArea}
-      />
-
-      <button onClick={handleSubmit} className={styles.button}>
-        <img src="/logo.png" alt="Send" className={styles.buttonImage} />
-      </button>
+    <div>
+      <div className="fixed bottom-0 left-0 w-full flex justify-center p-4">
+        <textarea
+          value={inputText}
+          onChange={handleInputChange}
+          placeholder="Type here to decide..."
+          className="w-3/4 p-8 rounded-lg outline-none bg-gray-900 text-white text-5xl resize-none"
+        />
+      <div className="relative inline-flex group">
+        <div className="absolute transitiona-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt" />
+        <a
+          onClick={handleSubmit}
+          className="relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+          role="button">
+          <img src="/logo.png" className="w-20" />
+        </a>
+      </div>
+    </div>
       <div>Options:
       {
         options.map((option, i) => (
           <div key={i}>{option}</div>
         ))
       }
+      </div>
+      <div>
+        <h3 className="text-white mt-5 text-base font-medium tracking-tight">Writes Upside-Down</h3>
+        <p className="text-slate-400 mt-2 text-sm">
+          The Zero Gravity Pen can be used to write in any orientation, including upside-down. It even works in outer space.
+        </p>
       </div>
       <div>Response: {response.response}</div>
       <div>Original dialog: {response.original_quote}</div>
