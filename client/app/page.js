@@ -55,9 +55,18 @@ export default function Page() {
       setIsSubmitting(INITIAL_IS_SUBMITTING);
     }
   };
+  const IsVisible = (option_str) => {
+    if (!response.options) return true;
+
+    for (const {title, is_chosen} of response.options) {
+      if (title == option_str && is_chosen) return true;
+    }
+
+    return false;
+  }
 
   return (
-    <div>
+    <div className="max-h-[80vh] overflow-y-auto">
       <div className="fixed bottom-0 left-0 w-full flex justify-center p-4">
         <input
           value={inputText}
@@ -86,9 +95,9 @@ export default function Page() {
       </div>
       <div>
       <div className="flex justify-center text-4xl mt-16"> 
-        <div className="grid grid-cols-2  flex space-x-10"> 
+        <div className="grid grid-cols-2 flex space-y-20"> 
           {options.map((str, index) => (
-            <div key={index} className="flex justify-center p-4 rounded-lg shadow-md text-white">
+            <div key={index} className={`flex p-4 rounded-lg shadow-md text-white transition-opacity duration-1000 ease-in-out ${IsVisible(str) ? 'opacity-100' : 'opacity-0'}`}>
               {str}
             </div>
           ))}
