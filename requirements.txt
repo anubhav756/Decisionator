@@ -7,5 +7,5 @@ langchain
 transformers
 google-cloud-aiplatform
 langchain-google-vertexai
-cloud-sql-python-connector["asyncpg"]
+cloud-sql-python-connector[asyncpg]
 fastapi

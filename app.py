@@ -9,6 +9,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost:3000",
+    "https://anubhavdhawan-playground.uc.r.appspot.com",
 ]
 
 app.add_middleware(

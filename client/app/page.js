@@ -53,7 +53,7 @@ export default function Page() {
     setIsExpanded(INITIAL_IS_EXPANDED);
     setIsSubmitting(true);
     try {
-      const response = await fetch('http://localhost:8000/ask', {
+      const response = await fetch(process.env.NEXT_PUBLIC_REACT_APP_BASE_URL + '/ask', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
