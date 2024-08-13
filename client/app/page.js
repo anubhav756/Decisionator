@@ -73,8 +73,8 @@ export default function Page() {
           value={inputText}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder="Type here to decide..."
-          className="w-3/4 p-8 rounded-full outline-none bg-gray-900 text-white text-5xl resize-none"
+          placeholder="Type choices here..."
+          className="w-3/4 p-8 rounded-full outline-none bg-gray-900 text-white text-5xl resize-none placeholder-gray-600"
         />
         <div className="relative inline-flex group ml-8">
           <div className={`absolute transitiona-all duration-1000 bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-full blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt ${isSubmitting ? "opacity-100 -inset-1" : "opacity-70 -inset-px"}`} />
