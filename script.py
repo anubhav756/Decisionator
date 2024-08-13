@@ -305,7 +305,7 @@ async def modify_option(dialog, query, model):
 async def merge_dialog_justification(justification, dialog, model):
     class Response(BaseModel):
         modified_sentence_b: str = Field(
-            description="The modified version of Sentence B."
+            description="The minimally modified version of Sentence B."
         )
 
     parser = PydanticOutputParser(pydantic_object=Response)
