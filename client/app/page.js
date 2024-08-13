@@ -82,7 +82,7 @@ export default function Page() {
   };
 
   return (
-    <div className="h-[80vh] p-8 overflow-y-auto">
+    <div className="h-[80vh] p-8 pt-0 overflow-y-auto">
       <div className="fixed bottom-0 left-0 w-full flex justify-center p-4">
         <input
           value={inputText}
@@ -107,7 +107,7 @@ export default function Page() {
         </div>
       </div>
       <div>
-      <div className=" text-4xl mt-8"> 
+      <div className="text-4xl"> 
         <div className="grid grid-cols-2 flex content-evenly"> 
           {options.map((str, index) => (
             <div key={index} className={`flex mt-16 p-4 rounded-lg shadow-md text-white transition-opacity duration-1000 ease-in-out relative ${IsVisible(str, response.options) ? 'opacity-100' : 'opacity-0'}`}>
@@ -135,11 +135,8 @@ export default function Page() {
     )}
     {response.response ? (
       <div className="mt-24 justify-center text-3xl">
-        <div className="text-gray-400">
-          **{response.character} gives a finger snap**
-        </div>
-        <div className="mb-16">
-          ...
+        <div>
+        <span className="text-gray-400">{response.character}:</span> *snaps finger...*
         </div>
         <div className="text-white mt-4">
           <span className="text-gray-400">{response.character}:</span> {response.response}
