@@ -134,7 +134,7 @@ export default function Page() {
       </div>
     )}
     {response.response ? (
-      <div className="mt-24 justify-center text-3xl">
+      <div className="mt-16 justify-center text-3xl">
         <div>
         <span className="text-gray-400">{response.character}:</span> *snaps finger...*
         </div>
