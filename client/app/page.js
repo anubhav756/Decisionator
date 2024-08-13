@@ -79,11 +79,8 @@ export default function Page() {
           <div className={`absolute transitiona-all duration-1000 bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-full blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt ${isSubmitting ? "opacity-100 -inset-1" : "opacity-70 -inset-px"}`} />
           <a
             onClick={(e) => {
-              if (isSubmitting || !inputText.length) {
-                e.preventDefault(); 
-              } else {
-                handleSnap(); 
-              }
+              if (isSubmitting || !inputText.length) e.preventDefault(); 
+              else handleSnap(); 
             }}
             className={`relative inline-flex items-center justify-center px-8 py-4 text-5xl text-white transition-all duration-200 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 focus:outline-none
                       ${isSubmitting ? 'pointer-events-none opacity-50 backdrop-filter backdrop-blur-lg' : 'bg-gray-900'}`}
@@ -117,10 +114,13 @@ export default function Page() {
     {response.response ? (
       <div className="mt-24 justify-center text-3xl">
         <div className="text-gray-400">
-          **{response.character} snaps finger**
+          **{response.character} gives a finger snap**
+        </div>
+        <div className="text-gray-400 mb-16">
+          ...
         </div>
         <div className="text-white mt-4">
-          {response.response}
+          {response.character}: {response.response}
         </div>
         <div className="mt-4 text-lg font-normal">
           {isExpanded ? (
