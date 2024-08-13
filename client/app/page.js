@@ -107,7 +107,10 @@ export default function Page() {
     {isSubmitting && !response.response && (
       <div className="fixed inset-0 z-50"> 
         <div className="flex items-center justify-center h-screen">
-          <img src="logo.png" className="h-80" />
+          <img src="logo-sharded.png" />
+          <img src="shard-1.png" className="animate-spin" style={{ position: 'absolute', marginBottom: 500, marginLeft: 150 }} />
+          <img src="shard-2.png" className="animate-spin" style={{ position: 'absolute', marginBottom: 440, marginLeft: 40 }} />
+          <img src="shard-3.png" className="animate-spin" style={{ position: 'absolute', marginBottom: 400, marginLeft: 220 }} />
         </div>
       </div>
     )}
