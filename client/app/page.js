@@ -76,7 +76,7 @@ export default function Page() {
           className="w-3/4 p-8 rounded-full outline-none bg-gray-900 text-white text-5xl resize-none"
         />
         <div className="relative inline-flex group ml-8">
-          <div className={`absolute transitiona-all duration-1000 bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt ${isSubmitting ? "opacity-100 -inset-1" : "opacity-70 -inset-px"}`} />
+          <div className={`absolute transitiona-all duration-1000 bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-full blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt ${isSubmitting ? "opacity-100 -inset-1" : "opacity-70 -inset-px"}`} />
           <a
             onClick={(e) => {
               if (isSubmitting || !inputText.length) {
@@ -85,8 +85,8 @@ export default function Page() {
                 handleSnap(); 
               }
             }}
-            className={`relative inline-flex items-center justify-center px-8 py-4 text-5xl text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 focus:outline-none
-                      ${isSubmitting ? 'pointer-events-none opacity-50' : ''}`}
+            className={`relative inline-flex items-center justify-center px-8 py-4 text-5xl text-white transition-all duration-200 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 focus:outline-none
+                      ${isSubmitting ? 'pointer-events-none opacity-50 backdrop-filter backdrop-blur-lg' : 'bg-gray-900'}`}
             role="button"
           >
             Snap
