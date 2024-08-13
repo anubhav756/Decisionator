@@ -47,44 +47,42 @@ export default function Page() {
   return (
     <div>
       <div className="fixed bottom-0 left-0 w-full flex justify-center p-4">
-        <textarea
+        <input
           value={inputText}
           onChange={handleInputChange}
           placeholder="Type here to decide..."
           className="w-3/4 p-8 rounded-lg outline-none bg-gray-900 text-white text-5xl resize-none"
         />
-      <div className="relative inline-flex group">
+      <div className="relative inline-flex group ml-8">
         <div className="absolute transitiona-all duration-1000 opacity-70 -inset-px bg-gradient-to-r from-[#44BCFF] via-[#FF44EC] to-[#FF675E] rounded-xl blur-lg group-hover:opacity-100 group-hover:-inset-1 group-hover:duration-200 animate-tilt" />
         <a
           onClick={handleSubmit}
-          className="relative inline-flex items-center justify-center px-8 py-4 text-lg font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
+          className="relative inline-flex items-center justify-center px-8 py-4 text-5xl font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900"
           role="button">
-          <img src="/logo.png" className="w-20" />
+          Snap
         </a>
       </div>
     </div>
-      <div>Options:
-      {
-        options.map((option, i) => (
-          <div key={i}>{option}</div>
-        ))
-      }
+    <div>
+      <div className="flex justify-center items-center text-4xl mt-24"> 
+        <div className="grid grid-cols-3 gap-4"> 
+          {options.map((str, index) => (
+            <div key={index} className="flex p-4 rounded-lg shadow-md text-white"> 
+              {str}
+            </div>
+          ))}
+        </div>
       </div>
-      <div>
-        <h3 className="text-white mt-5 text-base font-medium tracking-tight">Writes Upside-Down</h3>
-        <p className="text-slate-400 mt-2 text-sm">
-          The Zero Gravity Pen can be used to write in any orientation, including upside-down. It even works in outer space.
-        </p>
-      </div>
-      <div>Response: {response.response}</div>
-      <div>Original dialog: {response.original_quote}</div>
-      <div>Character: {response.character}</div>
-      <div>Movie: {response.movie}</div>
-      <div>Year: {response.year}</div>
-      <div>Justifications:</div>
-      {response && response.options && response.options.map(({title, justification, is_chosen}, i) => (
-        <div key={i}><b>{title}: </b>{justification}{is_chosen && " | CHOSEN!!!"}</div>
-      ))}
+    </div>
+    <div>Response: {response.response}</div>
+    <div>Original dialog: {response.original_quote}</div>
+    <div>Character: {response.character}</div>
+    <div>Movie: {response.movie}</div>
+    <div>Year: {response.year}</div>
+    <div>Justifications:</div>
+    {response && response.options && response.options.map(({title, justification, is_chosen}, i) => (
+      <div key={i}><b>{title}: </b>{justification}{is_chosen && " | CHOSEN!!!"}</div>
+    ))}
     </div>
   );
 }
