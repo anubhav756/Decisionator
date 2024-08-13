@@ -50,6 +50,7 @@ export default function Page() {
       }
     } catch (error) {
       console.error('Error:', error);
+      setInputText('Error: ' + error);
     }
     finally {
       setIsSubmitting(INITIAL_IS_SUBMITTING);
