@@ -66,7 +66,7 @@ export default function Page() {
   }
 
   return (
-    <div className="max-h-[80vh] overflow-y-auto">
+    <div className="h-[80vh] overflow-y-auto">
       <div className="fixed bottom-0 left-0 w-full flex justify-center p-4">
         <input
           value={inputText}
@@ -94,8 +94,14 @@ export default function Page() {
       <div className="flex justify-center text-4xl mt-16"> 
         <div className="grid grid-cols-2 flex space-y-20"> 
           {options.map((str, index) => (
-            <div key={index} className={`flex p-4 rounded-lg shadow-md text-white transition-opacity duration-1000 ease-in-out ${IsVisible(str) ? 'opacity-100' : 'opacity-0'}`}>
-              {str}
+            <div key={index} className={`flex p-4 rounded-lg shadow-md text-white transition-opacity duration-1000 ease-in-out relative ${IsVisible(str) ? 'opacity-100' : 'opacity-0'}`}>
+              <span className="absolute mx-auto border w-fit bg-gradient-to-r blur-xl from-blue-500 via-teal-500 to-pink-500 bg-clip-text box-content font-extrabold text-transparent">
+                {str}
+              </span>
+              <h1
+                className="relative top-0 w-fit h-auto bg-gradient-to-r from-blue-500 via-teal-500 to-pink-500 bg-clip-text font-extrabold text-transparent">
+                  {str}
+              </h1>
             </div>
           ))}
         </div>
@@ -116,7 +122,7 @@ export default function Page() {
         <div className="text-gray-400">
           **{response.character} gives a finger snap**
         </div>
-        <div className="text-gray-400 mb-16">
+        <div className="mb-16">
           ...
         </div>
         <div className="text-white mt-4">
@@ -132,7 +138,7 @@ export default function Page() {
               <div><span className="font-bold text-gray-400">Possible choices:</span></div>
               <ul className="pl-6">
               {response && response.options && response.options.map(({title, justification, is_chosen}, i) => (
-                <li key={i}>{is_chosen ? "✅" : "❌"} <b>{title} </b>{justification}</li>
+                <li key={i}>{is_chosen ? "✅" : "❌"} <span className="font-bold">{title} </span><span className="font-normal text-gray-400">{justification}</span></li>
               ))}
               </ul>
             </div>
