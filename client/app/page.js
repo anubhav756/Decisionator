@@ -6,12 +6,14 @@ const INITIAL_INPUT = '';
 const INITIAL_OPTIONS = [];
 const INITIAL_RESPONSE = {};
 const INITIAL_IS_SUBMITTING = false;
+const INITIAL_IS_OPEN = false;
 
 export default function Page() {
   const [inputText, setInputText] = useState(INITIAL_INPUT);
   const [options, setOptions] = useState(INITIAL_OPTIONS);
   const [response, setResponse] = useState(INITIAL_RESPONSE);
   const [isSubmitting, setIsSubmitting] = useState(INITIAL_IS_SUBMITTING);
+  const [isOpen, setIsOpen] = useState(INITIAL_IS_OPEN);
 
   const handleInputChange = (event) => {
     setInputText(event.target.value);
@@ -76,7 +78,6 @@ export default function Page() {
           }
         }}
         className={`relative inline-flex items-center justify-center px-8 py-4 text-5xl font-bold text-white transition-all duration-200 bg-gray-900 font-pj rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 focus:outline-none
-
                    ${isSubmitting ? 'pointer-events-none opacity-50' : ''}`}
         role="button">
         Snap
@@ -85,7 +86,7 @@ export default function Page() {
     </div>
     <div>
       <div className="flex justify-center items-center text-4xl mt-24"> 
-        <div className="grid grid-cols-3 gap-4"> 
+        <div className="grid grid-cols-2 gap-4"> 
           {options.map((str, index) => (
             <div key={index} className="flex p-4 rounded-lg shadow-md text-white"> 
               {str}
@@ -94,15 +95,39 @@ export default function Page() {
         </div>
       </div>
     </div>
-    <div>Response: {response.response}</div>
-    <div>Original dialog: {response.original_quote}</div>
-    <div>Character: {response.character}</div>
-    <div>Movie: {response.movie}</div>
-    <div>Year: {response.year}</div>
-    <div>Justifications:</div>
-    {response && response.options && response.options.map(({title, justification, is_chosen}, i) => (
-      <div key={i}><b>{title}: </b>{justification}{is_chosen && " | CHOSEN!!!"}</div>
-    ))}
+    {response.response ? (
+      <div className="mt-24 justify-center text-3xl font-bold transition-all duration-200">
+        <div className="text-gray-400">
+          **{response.character} snaps finger**
+        </div>
+        <div className="text-white mt-4">
+          {response.response}
+        </div>
+        <button 
+          onClick={() => setIsOpen(true)}
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+        >
+          More insights
+        </button>
+      </div>
+    ) : ""}
+    {isOpen && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-gray-800 p-6 rounded-lg shadow-lg text-white"> {/* Dark background and white text */}
+          <button onClick={() => setIsOpen(false)} className="absolute top-2 right-2 text-gray-300 hover:text-gray-100">
+            Close
+          </button>
+          <div>Original dialog: {response.original_quote}</div>
+          <div>Character: {response.character}</div>
+          <div>Movie: {response.movie}</div>
+          <div>Year: {response.year}</div>
+          <div>Justifications:</div>
+          {response && response.options && response.options.map(({title, justification, is_chosen}, i) => (
+            <div key={i}><b>{title}: </b>{justification}{is_chosen && " | CHOSEN!!!"}</div>
+          ))}
+        </div>
+      </div>
+    )}
     </div>
   );
 }
