@@ -104,6 +104,13 @@ export default function Page() {
         </div>
       </div>
     </div>
+    {isSubmitting && !response.response && (
+      <div className="fixed inset-0 z-50"> 
+        <div className="flex items-center justify-center h-screen">
+          <img src="logo.png" className="h-80" />
+        </div>
+      </div>
+    )}
     {response.response ? (
       <div className="mt-24 justify-center text-3xl">
         <div className="text-gray-400">
@@ -112,7 +119,7 @@ export default function Page() {
         <div className="text-white mt-4">
           {response.response}
         </div>
-        <div className="mt-24 text-lg font-normal">
+        <div className="mt-4 text-lg font-normal">
           {isExpanded ? (
             <div>
               <div><span className="font-bold text-gray-400">Original dialog: </span>{response.original_quote}</div>
