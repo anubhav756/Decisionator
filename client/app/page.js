@@ -7,6 +7,30 @@ const INITIAL_OPTIONS = [];
 const INITIAL_RESPONSE = {};
 const INITIAL_IS_SUBMITTING = false;
 const INITIAL_IS_EXPANDED = false;
+const COLORS = (() => {
+  let ALL_COLORS = ["red", "orange", "amber", "lime", "emerald", "cyan", "indigo", "fuchsia"];
+  let currentIndex = ALL_COLORS.length;
+
+  while (currentIndex != 0) {
+    let randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    [ALL_COLORS[currentIndex], ALL_COLORS[randomIndex]] = [
+      ALL_COLORS[randomIndex], ALL_COLORS[currentIndex]];
+  }
+
+  return ALL_COLORS;
+})();
+
+const IsVisible = (option_str, all_options) => {
+  if (!all_options) return true;
+
+  for (const {title, is_chosen} of all_options) {
+    if (title == option_str && is_chosen) return true;
+  }
+
+  return false;
+};
 
 export default function Page() {
   const [inputText, setInputText] = useState(INITIAL_INPUT);
@@ -50,24 +74,15 @@ export default function Page() {
       }
     } catch (error) {
       console.error('Error:', error);
-      setInputText('Error: ' + error);
+      setInputText('Oops! ' + error);
     }
     finally {
       setIsSubmitting(INITIAL_IS_SUBMITTING);
     }
   };
-  const IsVisible = (option_str) => {
-    if (!response.options) return true;
-
-    for (const {title, is_chosen} of response.options) {
-      if (title == option_str && is_chosen) return true;
-    }
-
-    return false;
-  }
 
   return (
-    <div className="h-[80vh] overflow-y-auto">
+    <div className="h-[80vh] p-8 overflow-y-auto">
       <div className="fixed bottom-0 left-0 w-full flex justify-center p-4">
         <input
           value={inputText}
@@ -84,7 +99,7 @@ export default function Page() {
               else handleSnap(); 
             }}
             className={`relative inline-flex items-center justify-center px-8 py-4 text-5xl text-white transition-all duration-200 font-pj rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-900 focus:outline-none
-                      ${isSubmitting ? 'pointer-events-none opacity-50 backdrop-filter backdrop-blur-lg' : 'bg-gray-900'}`}
+                      ${isSubmitting ? 'pointer-events-none opacity-100 backdrop-filter backdrop-blur-lg' : 'bg-gray-900'}`}
             role="button"
           >
             Snap
@@ -92,15 +107,15 @@ export default function Page() {
         </div>
       </div>
       <div>
-      <div className="flex justify-center text-4xl mt-16"> 
-        <div className="grid grid-cols-2 flex space-y-20"> 
+      <div className=" text-4xl mt-8"> 
+        <div className="grid grid-cols-2 flex content-evenly"> 
           {options.map((str, index) => (
-            <div key={index} className={`flex p-4 rounded-lg shadow-md text-white transition-opacity duration-1000 ease-in-out relative ${IsVisible(str) ? 'opacity-100' : 'opacity-0'}`}>
-              <span className="absolute mx-auto border w-fit bg-gradient-to-r blur-xl from-blue-500 via-teal-500 to-pink-500 bg-clip-text box-content font-extrabold text-transparent">
+            <div key={index} className={`flex mt-16 p-4 rounded-lg shadow-md text-white transition-opacity duration-1000 ease-in-out relative ${IsVisible(str, response.options) ? 'opacity-100' : 'opacity-0'}`}>
+              <span className={`absolute mx-auto border w-fit bg-${COLORS[index % COLORS.length]}-500 blur-xl bg-clip-text box-content font-extrabold text-transparent`}>
                 {str}
               </span>
               <h1
-                className="relative top-0 w-fit h-auto bg-gradient-to-r from-blue-500 via-teal-500 to-pink-500 bg-clip-text font-extrabold text-transparent">
+                className={`relative top-0 w-fit h-auto bg-${COLORS[index % COLORS.length]}-400 bg-clip-text font-extrabold text-transparent`}>
                   {str}
               </h1>
             </div>
