@@ -6,12 +6,14 @@ const INITIAL_INPUT = '';
 const INITIAL_OPTIONS = [];
 const INITIAL_RESPONSE = {};
 const INITIAL_IS_SUBMITTING = false;
+const INITIAL_IS_EXPANDED = false;
 
 export default function Page() {
   const [inputText, setInputText] = useState(INITIAL_INPUT);
   const [options, setOptions] = useState(INITIAL_OPTIONS);
   const [response, setResponse] = useState(INITIAL_RESPONSE);
   const [isSubmitting, setIsSubmitting] = useState(INITIAL_IS_SUBMITTING);
+  const [isExpanded, setIsExpanded] = useState(INITIAL_IS_EXPANDED);
 
   const handleInputChange = (event) => {
     setInputText(event.target.value);
@@ -24,6 +26,7 @@ export default function Page() {
   const handleSnap = async () => {
     setResponse(INITIAL_RESPONSE);
     setOptions(INITIAL_OPTIONS);
+    setIsExpanded(INITIAL_IS_EXPANDED);
     setIsSubmitting(true);
     try {
       const response = await fetch('http://localhost:8000/ask', {
@@ -82,10 +85,10 @@ export default function Page() {
         </div>
       </div>
       <div>
-      <div className="flex justify-center items-center text-4xl mt-24"> 
-        <div className="grid grid-cols-2 gap-4"> 
+      <div className="flex justify-center text-4xl mt-16"> 
+        <div className="grid grid-cols-2  flex space-x-10"> 
           {options.map((str, index) => (
-            <div key={index} className="flex justify-center items-center p-4 rounded-lg shadow-md text-white w-full">
+            <div key={index} className="flex justify-center p-4 rounded-lg shadow-md text-white">
               {str}
             </div>
           ))}
@@ -101,14 +104,22 @@ export default function Page() {
           {response.response}
         </div>
         <div className="mt-24 text-lg font-normal">
-          <div><span className="font-bold text-gray-400">Original dialog: </span>{response.original_quote}</div>
-          <div><span className="font-bold text-gray-400">Character: </span>{response.character}</div>
-          <div><span className="font-bold text-gray-400">Movie: </span>{response.movie}</div>
-          <div><span className="font-bold text-gray-400">Year: </span>{response.year}</div>
-          <div><span className="font-bold text-gray-400">Justifications:</span></div>
-          {response && response.options && response.options.map(({title, justification, is_chosen}, i) => (
-            <div key={i}><b>{title}: </b>{justification}{is_chosen && " | CHOSEN!!!"}</div>
-          ))}
+          {isExpanded ? (
+            <div>
+              <div><span className="font-bold text-gray-400">Original dialog: </span>{response.original_quote}</div>
+              <div><span className="font-bold text-gray-400">Character: </span>{response.character}</div>
+              <div><span className="font-bold text-gray-400">Movie: </span>{response.movie}</div>
+              <div><span className="font-bold text-gray-400">Year: </span>{response.year}</div>
+              <div><span className="font-bold text-gray-400">Possible choices:</span></div>
+              <ul className="pl-6">
+              {response && response.options && response.options.map(({title, justification, is_chosen}, i) => (
+                <li key={i}>{is_chosen ? "✅" : "❌"} <b>{title} </b>{justification}</li>
+              ))}
+              </ul>
+            </div>
+          ) : (
+            <button className="text-gray-400 hover:text-white font-bold" onClick={()=>setIsExpanded(!isExpanded)}>More Insights</button>
+          )}
         </div>
       </div>
     ) : ""}
