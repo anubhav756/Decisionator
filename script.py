@@ -304,18 +304,18 @@ async def modify_option(dialog, query, model):
 
 async def merge_dialog_justification(justification, dialog, model):
     class Response(BaseModel):
-        modified_sentence_b: str = Field(
-            description="The minimally modified version of Sentence B."
-        )
+        merged_sentence: str = Field(description="The merged sentence.")
 
     parser = PydanticOutputParser(pydantic_object=Response)
     prompt = PromptTemplate(
         template="""
             {format_instructions}
             Note that two sentences are given below, namely Sentence A and Sentence B.
-            Your task is to minimally modify Sentence B to make sure that the meaning of Sentence A is conveyed as well.
-            Be creative and make sure that it sounds like one single sentence.
-            Also try to include the entire Sentence B in your response.
+            Your task is to merge sentences A and B according to the important instructions given below.
+
+            **Important instructions:**
+            1. The merged sentence should have exact words from Sentence B.
+            2. The words from Sentence B should seamlessly connect with the meaning conveyed through Sentence A.
 
             **Sentence A:**
             {justification}
@@ -338,7 +338,7 @@ async def merge_dialog_justification(justification, dialog, model):
         )
         print(">>>>", response)
 
-        return response.modified_sentence_b
+        return response.merged_sentence
     except OutputParserException as e:
         print(f"Error parsing model output: {e}")
 
