@@ -315,7 +315,7 @@ async def merge_dialog_justification(justification, dialog, model):
 
             **Important instructions:**
             1. The merged sentence should have exact words from Sentence B.
-            2. The words from Sentence B should seamlessly connect with the meaning conveyed through Sentence A.
+            2. The words from Sentence B should seamlessly connect with Sentence A.
 
             **Sentence A:**
             {justification}
