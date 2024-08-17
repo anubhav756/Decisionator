@@ -32,6 +32,51 @@ const IsVisible = (option_str, all_options) => {
   return false;
 };
 
+const largestCommonSubstring = (str1, str2) => {
+  let m = str1.length;
+  let n = str2.length;
+
+  let table = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+
+  let maxLength = 0;
+  let endIndex = -1;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (str1[i - 1].toLowerCase() === str2[j - 1].toLowerCase()) {
+        table[i][j] = table[i - 1][j - 1] + 1;
+        if (table[i][j] > maxLength) {
+          maxLength = table[i][j];
+          endIndex = i - 1;
+        }
+      }
+    }
+  }
+
+  if (maxLength <= 0) return null;
+
+  return {
+    start: endIndex - maxLength + 1,
+    end: endIndex + 1,
+  };
+}
+
+const Dialog = ({ response }) => {
+  const dialogPos = largestCommonSubstring(response.response, response.original_quote);
+  
+  if (!dialogPos) return response.response;
+
+  return (
+    <span>
+      {response.response.substring(0, dialogPos.start)}
+      <span className="bg-gradient-to-r from-blue-500 via-teal-500 to-pink-500 bg-clip-text text-transparent">
+        {response.response.substring(dialogPos.start, dialogPos.end)}
+      </span>
+      {response.response.substring(dialogPos.end)}
+    </span>
+  );
+};
+
 export default function Page() {
   const [inputText, setInputText] = useState(INITIAL_INPUT);
   const [options, setOptions] = useState(INITIAL_OPTIONS);
@@ -110,7 +155,7 @@ export default function Page() {
       <div className="text-4xl"> 
         <div className="grid grid-cols-2 flex content-evenly"> 
           {options.map((str, index) => (
-            <div key={index} className={`flex mt-16 p-4 rounded-lg shadow-md text-white transition-opacity duration-1000 ease-in-out relative ${IsVisible(str, response.options) ? 'opacity-100' : 'opacity-0'}`}>
+            <div key={index} className={`flex justify-center mt-16 p-4 rounded-lg shadow-md text-white transition-opacity duration-1000 ease-in-out relative ${IsVisible(str, response.options) ? 'opacity-100' : 'opacity-0'}`}>
               <span className={`absolute mx-auto border w-fit bg-${COLORS[index % COLORS.length]}-500 blur-xl bg-clip-text box-content font-extrabold text-transparent`}>
                 {str}
               </span>
@@ -136,10 +181,10 @@ export default function Page() {
     {response.response ? (
       <div className="mt-16 justify-center text-3xl">
         <div>
-        <span className="text-gray-400">{response.character}:</span> *snaps finger...*
+        <span className="text-gray-400">{response.character}:</span> <span className="italic">*snaps finger*</span>
         </div>
         <div className="text-white mt-4">
-          <span className="text-gray-400">{response.character}:</span> {response.response}
+          <span className="text-gray-400">{response.character}:</span> <Dialog response={response} />
         </div>
         <div className="mt-4 text-lg font-normal">
           {isExpanded ? (
