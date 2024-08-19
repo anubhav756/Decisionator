@@ -43,7 +43,8 @@ const largestCommonSubstring = (str1, str2) => {
 
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
-      if (str1[i - 1].toLowerCase() === str2[j - 1].toLowerCase()) {
+      if (str1[i - 1].toLowerCase() === str2[j - 1].toLowerCase() || 
+          /[^a-zA-Z0-9]/.test(str1[i - 1]) && /[^a-zA-Z0-9]/.test(str2[j - 1])) {
         table[i][j] = table[i - 1][j - 1] + 1;
         if (table[i][j] > maxLength) {
           maxLength = table[i][j];
