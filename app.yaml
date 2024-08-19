@@ -1,24 +1,14 @@
-runtime: python39
+runtime: python
+env: flex 
+entrypoint: gunicorn -k uvicorn.workers.UvicornWorker -b :$PORT app:app
 
-handlers:
-- url: /ask
-  script: auto 
+runtime_config:
+  operating_system: ubuntu22
 
-- url: /_next/static/
-  static_dir: client/.next/static 
+manual_scaling:
+  instances: 1
 
-- url: /
-  static_files: client/out/index.html
-  upload: client/out/index.html
-  http_headers:
-    Cache-Control: public, max-age=0, must-revalidate
-  secure: always
-
-- url: /(.*)
-  static_files: client/out/\1
-  upload: client/out/(.*)
-  http_headers:
-    Cache-Control: public, max-age=0, must-revalidate
-  secure: always
-
-entrypoint: gunicorn -b :$PORT app:app
+resources:
+  cpu: 1
+  memory_gb: 0.5
+  disk_size_gb: 10

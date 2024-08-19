@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from script import make_decision
@@ -28,4 +29,11 @@ class Query(BaseModel):
 @app.post("/ask")
 async def ask_question(query: Query):
     print("GOT QUERY!!!", query)
-    return StreamingResponse(make_decision(query), media_type="text/event-stream")
+    return StreamingResponse(
+        make_decision(query),
+        media_type="text/event-stream",
+        headers={"X-Accel-Buffering": "no"},
+    )
+
+
+app.mount("/", StaticFiles(directory="client/out", html=True), name="static")
