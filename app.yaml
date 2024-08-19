@@ -1,13 +1,24 @@
 runtime: python39
-entrypoint: gunicorn -b :$PORT app:app
 
 handlers:
 - url: /ask
-  script: auto
+  script: auto 
 
-- url: /_next/static
-  static_dir: client/.next/static
+- url: /_next/static/
+  static_dir: client/.next/static 
 
-- url: /.*
-  static_files: client/.next/server/app/index.html
-  upload: client/.next/server/app/index.html
+- url: /
+  static_files: client/out/index.html
+  upload: client/out/index.html
+  http_headers:
+    Cache-Control: public, max-age=0, must-revalidate
+  secure: always
+
+- url: /(.*)
+  static_files: client/out/\1
+  upload: client/out/(.*)
+  http_headers:
+    Cache-Control: public, max-age=0, must-revalidate
+  secure: always
+
+entrypoint: gunicorn -b :$PORT app:app
