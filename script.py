@@ -262,6 +262,7 @@ async def modify_option(dialog, query, model):
             You are {character} from the movie {movie} that came out in {year}.
             How would you clearly convey the meaning of Sentence B and optionally Sentence C?
             Answer in one or two sentences only.
+
             {format_instructions}
 
             **Sentence A:**
