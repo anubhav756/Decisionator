@@ -134,7 +134,7 @@ export default function Page() {
           value={inputText}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder="Type choices here..."
+          placeholder="Ask the Multiverse... and face the snap!"
           className="w-3/4 p-8 rounded-full outline-none bg-gray-900 text-white text-5xl resize-none placeholder-gray-600"
         />
         <div className="relative inline-flex group ml-8">
@@ -173,13 +173,14 @@ export default function Page() {
       <div className="fixed inset-0" style={{ zIndex: -1 }}>
         <div className="flex items-center justify-center h-screen">
           <img src="/logo-sharded.png" style={{ height: 250 }} />
-          {isSubmitting && (
+          {isSubmitting ? (
             <>
               <img src="/shard-1.png" className="animate-spin" style={{ position: 'absolute', height: 33, marginBottom: 270, marginLeft: 85 }} />
               <img src="/shard-2.png" className="animate-spin" style={{ position: 'absolute', height: 24, marginBottom: 230, marginLeft: 20 }} />
               <img src="/shard-3.png" className="animate-spin" style={{ position: 'absolute', height: 17, marginBottom: 210, marginLeft: 130 }} />
             </>
-          )}
+          ) : <img src="/decisionator.png" style={{ position: 'absolute', height: 80, top: 80 }} />
+          }
         </div>
       </div>
     )}
