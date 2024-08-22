@@ -348,6 +348,7 @@ async def make_decision(query):
     loop = asyncio.get_running_loop()
     async with Connector(loop=loop) as connector:
         conn = await get_conn(connector)
+        # await setup_db(conn)
         # await ping_db(conn)
 
         model = ChatVertexAI(model_name="gemini-pro")
